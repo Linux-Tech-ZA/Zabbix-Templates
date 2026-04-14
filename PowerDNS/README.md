@@ -22,7 +22,7 @@ sudo chmod 440 /etc/sudoers.d/zabbix
 File contents (`/etc/sudoers.d/zabbix`):
 
 ```
-zabbix ALL=(ALL) NOPASSWD: /usr/bin/pdns_control
+zabbix ALL=(root) NOPASSWD: /usr/bin/pdns_control
 ```
 
 ### 2. Configure Zabbix Agent 2 UserParameters

@@ -11,6 +11,18 @@ zabbix_export:
         PowerDNS Authoritative Server 4.8.4 statistics
         Only includes metrics confirmed present via pdns_control list.
         Compatible with Zabbix 7.0 LTS.
+
+        RAW COUNTERS: Items collected via pdns.stats[*] are monotonic totals that
+        increase since server start. They produce ever-growing graphs and are kept
+        for historical reference and delta calculations.
+
+        CALCULATED RATES: Items with key pdns.rate[*] express per-minute rates
+        derived from the raw counters using Zabbix rate() function. Use these for
+        dashboards and trending to see current activity levels.
+
+        CALCULATED RATIOS: Items with key pdns.ratio[*] express percentage ratios
+        (cache hit rates, error percentages) calculated from the raw counters.
+        These provide actionable insight into cache efficiency and error conditions.
       groups:
         - name: Templates
       items:
@@ -539,11 +551,267 @@ zabbix_export:
           key: 'pdns.stats[zone-cache-size]'
           delay: 60s
 
+        # --- Calculated rate items (per-minute derivatives of monotonic counters) ---
+
+        - uuid: 354cbe881bd04444bd82711fc896a103
+          name: 'UDP Answers (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[udp-answers]'
+          delay: 60s
+          value_type: FLOAT
+          units: ans/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[udp-answers],1m)*60'
+          description: 'UDP answers sent per minute (rate derived from monotonic counter udp-answers). Use this for dashboards instead of the raw total.'
+
+        - uuid: 4e978385f36848398fd5430c1ed95006
+          name: 'TCP Answers (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[tcp-answers]'
+          delay: 60s
+          value_type: FLOAT
+          units: ans/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[tcp-answers],1m)*60'
+          description: 'TCP answers sent per minute (rate derived from monotonic counter tcp-answers).'
+
+        - uuid: 549935f1913646d3adaaef02215035ff
+          name: 'UDP Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[udp-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[udp-queries],1m)*60'
+          description: 'UDP queries received per minute (rate derived from monotonic counter udp-queries).'
+
+        - uuid: a8c7d226a5604c979f6a1e9050e49edf
+          name: 'TCP Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[tcp-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[tcp-queries],1m)*60'
+          description: 'TCP queries received per minute (rate derived from monotonic counter tcp-queries).'
+
+        - uuid: 3354116640b8447195ff84444c3a2733
+          name: 'UDP4 Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[udp4-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[udp4-queries],1m)*60'
+          description: 'IPv4 UDP queries received per minute (rate derived from monotonic counter udp4-queries).'
+
+        - uuid: eb468cc7f735459e8fab7bbfdf924a8f
+          name: 'UDP6 Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[udp6-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[udp6-queries],1m)*60'
+          description: 'IPv6 UDP queries received per minute (rate derived from monotonic counter udp6-queries).'
+
+        - uuid: e461c1cf0e844eccbbc58603ef338b16
+          name: 'TCP4 Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[tcp4-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[tcp4-queries],1m)*60'
+          description: 'IPv4 TCP queries received per minute (rate derived from monotonic counter tcp4-queries).'
+
+        - uuid: 14519e9315e74abebe603a4a27f7e5d4
+          name: 'TCP6 Queries (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[tcp6-queries]'
+          delay: 60s
+          value_type: FLOAT
+          units: req/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[tcp6-queries],1m)*60'
+          description: 'IPv6 TCP queries received per minute (rate derived from monotonic counter tcp6-queries).'
+
+        - uuid: dd57344660ac4979bdaad5062f458c05
+          name: 'Corrupt Packets (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[corrupt-packets]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[corrupt-packets],1m)*60'
+          description: 'Corrupt packets received per minute (rate derived from monotonic counter corrupt-packets). Sustained elevation may indicate network issues or attack traffic.'
+          triggers:
+            - uuid: caa80bd0c8ba4289bb4bddca3f46fb4b
+              expression: 'min(/PowerDNS Stats/pdns.rate[corrupt-packets],5m)>5'
+              name: 'PowerDNS: Elevated corrupt packet rate (>5/min for 5m)'
+              priority: WARNING
+              description: 'Corrupt packet rate has been above 5 per minute for 5 minutes. May indicate network issues or attack traffic.'
+            - uuid: 1faf90d7fcb740768d0360abc6efb7b8
+              expression: 'min(/PowerDNS Stats/pdns.rate[corrupt-packets],5m)>20'
+              name: 'PowerDNS: High corrupt packet rate (>20/min for 5m)'
+              priority: HIGH
+              description: 'Corrupt packet rate exceeds 20 per minute for 5 minutes. Likely indicates a network problem or active attack.'
+
+        - uuid: 7d6c35627a1f4c2b8505cbab7f821e7c
+          name: 'Overload Drops (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[overload-drops]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[overload-drops],1m)*60'
+          description: 'Queries dropped due to server overload per minute (rate derived from monotonic counter overload-drops). Any sustained non-zero value is a serious concern.'
+          triggers:
+            - uuid: e65adf4be07e4af49319bbfcec109f61
+              expression: 'min(/PowerDNS Stats/pdns.rate[overload-drops],5m)>0'
+              name: 'PowerDNS: Queries being dropped due to overload (5m)'
+              priority: HIGH
+              description: 'PowerDNS has been dropping queries due to overload for at least 5 minutes. Increase CPU/memory resources or tune queue limits.'
+
+        - uuid: 2b98d4ad95fc42da87da8c3ba2ba15c1
+          name: 'Timed Out Packets (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[timedout-packets]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[timedout-packets],1m)*60'
+          description: 'Timed out packets per minute (rate derived from monotonic counter timedout-packets).'
+
+        - uuid: f1aba5cd8960449fa72ef652f98bbea9
+          name: 'SERVFAIL Packets (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[servfail-packets]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[servfail-packets],1m)*60'
+          description: 'SERVFAIL responses sent per minute (rate derived from monotonic counter servfail-packets).'
+
+        - uuid: 403fd25845b042c9a7497af6b0d74d4a
+          name: 'NXDOMAIN Packets (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[nxdomain-packets]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[nxdomain-packets],1m)*60'
+          description: 'NXDOMAIN responses sent per minute (rate derived from monotonic counter nxdomain-packets).'
+
+        - uuid: a0806b58c28c4e66b9c9bb50742c4693
+          name: 'NOERROR Packets (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[noerror-packets]'
+          delay: 60s
+          value_type: FLOAT
+          units: pkt/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[noerror-packets],1m)*60'
+          description: 'NOERROR responses sent per minute (rate derived from monotonic counter noerror-packets).'
+
+        - uuid: 21afc88339154244b60bafae878bb06b
+          name: 'UDP In-Errors (/min)'
+          type: CALCULATED
+          key: 'pdns.rate[udp-in-errors]'
+          delay: 60s
+          value_type: FLOAT
+          units: err/min
+          params: 'rate(/PowerDNS Stats/pdns.stats[udp-in-errors],1m)*60'
+          description: 'UDP receive errors per minute (rate derived from monotonic counter udp-in-errors). Elevation may indicate socket buffer exhaustion or network problems.'
+          triggers:
+            - uuid: a581225d118b4325a4c2edb00b391cd5
+              expression: 'min(/PowerDNS Stats/pdns.rate[udp-in-errors],5m)>10'
+              name: 'PowerDNS: Elevated UDP receive error rate (>10/min for 5m)'
+              priority: WARNING
+              description: 'UDP receive error rate exceeds 10 per minute for 5 minutes. Possible network or socket buffer issue.'
+
+        # --- Calculated ratio items (cache hit rates, error percentages) ---
+
+        - uuid: 576fd12260694762ac6e54604d1cfce3
+          name: 'Query Cache Hit Ratio (%)'
+          type: CALCULATED
+          key: 'pdns.ratio[query-cache-hitrate]'
+          delay: 60s
+          value_type: FLOAT
+          units: '%'
+          params: 'last(/PowerDNS Stats/pdns.stats[query-cache-hit])/(last(/PowerDNS Stats/pdns.stats[query-cache-hit])+last(/PowerDNS Stats/pdns.stats[query-cache-miss])+0.000001)*100'
+          description: 'Query cache hit ratio percentage. Values near 100% indicate effective caching. Low values suggest cache thrashing or an undersized cache. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
+          triggers:
+            - uuid: 5b9a351d15134edb95059cbdd5a59b99
+              expression: 'max(/PowerDNS Stats/pdns.ratio[query-cache-hitrate],10m)<70'
+              name: 'PowerDNS: Query cache hit ratio below 70% for 10m'
+              priority: WARNING
+              description: 'Query cache hit ratio has been below 70% for 10 minutes. Consider increasing query-cache-max-entries or reviewing zone TTLs.'
+
+        - uuid: 10dd2ce9dda0431c8d9d4bca278fa9fe
+          name: 'Packet Cache Hit Ratio (%)'
+          type: CALCULATED
+          key: 'pdns.ratio[packetcache-hitrate]'
+          delay: 60s
+          value_type: FLOAT
+          units: '%'
+          params: 'last(/PowerDNS Stats/pdns.stats[packetcache-hit])/(last(/PowerDNS Stats/pdns.stats[packetcache-hit])+last(/PowerDNS Stats/pdns.stats[packetcache-miss])+0.000001)*100'
+          description: 'Packet cache hit ratio percentage. High values significantly reduce backend load. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
+          triggers:
+            - uuid: 51cf5f23ce0645478cccddb0047294cd
+              expression: 'max(/PowerDNS Stats/pdns.ratio[packetcache-hitrate],10m)<70'
+              name: 'PowerDNS: Packet cache hit ratio below 70% for 10m'
+              priority: WARNING
+              description: 'Packet cache hit ratio has been below 70% for 10 minutes. Consider increasing max-packet-cache-entries.'
+
+        - uuid: 6df3f5257a8a443b80e8115b5c130513
+          name: 'Zone Cache Hit Ratio (%)'
+          type: CALCULATED
+          key: 'pdns.ratio[zone-cache-hitrate]'
+          delay: 60s
+          value_type: FLOAT
+          units: '%'
+          params: 'last(/PowerDNS Stats/pdns.stats[zone-cache-hit])/(last(/PowerDNS Stats/pdns.stats[zone-cache-hit])+last(/PowerDNS Stats/pdns.stats[zone-cache-miss])+0.000001)*100'
+          description: 'Zone cache hit ratio percentage. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
+
+        - uuid: 9d5f13e94b1c42089b0a462754084096
+          name: 'Error Response Rate (%)'
+          type: CALCULATED
+          key: 'pdns.ratio[error-rate]'
+          delay: 60s
+          value_type: FLOAT
+          units: '%'
+          params: '(last(/PowerDNS Stats/pdns.stats[servfail-packets])+last(/PowerDNS Stats/pdns.stats[nxdomain-packets]))/(last(/PowerDNS Stats/pdns.stats[noerror-packets])+last(/PowerDNS Stats/pdns.stats[servfail-packets])+last(/PowerDNS Stats/pdns.stats[nxdomain-packets])+0.000001)*100'
+          description: 'Percentage of DNS responses that are errors (SERVFAIL + NXDOMAIN out of total responses). High values may indicate backend issues or a flood of invalid queries. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when all counters are zero (e.g., immediately after startup).'
+
       tags:
         - tag: class
           value: software
         - tag: target
           value: powerdns
+
+      triggers:
+        - uuid: 3ec3b09c25e747bf89648d2d20418b58
+          expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>100000'
+          name: 'PowerDNS: Backend latency above 100ms for 5m'
+          priority: WARNING
+          description: 'Backend (database) latency has been above 100ms (100,000 µs) for 5 minutes. Check backend database performance. backend-latency is reported in microseconds.'
+        - uuid: 71b6ac34cb3f4ea3b622b2fdd73bf80a
+          expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>500000'
+          name: 'PowerDNS: Backend latency above 500ms for 5m'
+          priority: HIGH
+          description: 'Backend (database) latency has been above 500ms (500,000 µs) for 5 minutes. Backend is severely degraded. backend-latency is reported in microseconds.'
+        - uuid: 33bba23bd57c438a90eb4eef1eb9c6ad
+          expression: 'min(/PowerDNS Stats/pdns.stats[qsize-q],5m)>100'
+          name: 'PowerDNS: Query queue depth above 100 for 5m'
+          priority: HIGH
+          description: 'PowerDNS query queue (qsize-q) has been above 100 for 5 minutes. The server may be overloaded or a backend is slow.'
+        - uuid: e1856d211fcb4423bb45ace03f05eb65
+          expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>800'
+          name: 'PowerDNS: File descriptor usage above 800 for 10m'
+          priority: WARNING
+          description: 'PowerDNS is using more than 800 file descriptors. This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit (cat /proc/$(pidof pdns_server)/limits | grep files). Consider raising the process ulimit if this persists.'
+        - uuid: 76e90823df4148cea614e1d76c43d41b
+          expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>950'
+          name: 'PowerDNS: File descriptor usage critically high (>950) for 10m'
+          priority: HIGH
+          description: 'PowerDNS file descriptor usage is critically high (>950). This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit. Raise the process ulimit or reduce open connections immediately to avoid service failure.'
 
       valuemaps:
         - uuid: 7a2f60d3d46c40f48ff1f736ab3a963e

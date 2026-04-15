@@ -20,6 +20,8 @@ zabbix_export:
         derived from the raw counters using Zabbix rate() function with a 2-minute
         window (2x the 60s poll interval, required for rate() to have ≥2 data points).
         Use these for dashboards and trending to see current activity levels.
+        Item formulas use {HOST.HOST} to reference items on the same host at runtime,
+        which correctly resolves to the actual host name (not the template name).
 
         CALCULATED RATIOS: Items with key pdns.ratio[*] express percentage ratios
         (cache hit rates, error percentages) calculated from the raw counters.
@@ -35,7 +37,7 @@ zabbix_export:
           delay: 60s
           triggers:
             - uuid: 248bb152e0574701b98a14eb7c8e4f54
-              expression: 'last(/PowerDNS Stats/pdns.make-dns-query)="FAIL"'
+              expression: 'last(/{HOST.HOST}/pdns.make-dns-query)="FAIL"'
               name: 'DNS server does not respond to queries'
               priority: HIGH
               description: 'PowerDNS does not respond to test DNS queries.'
@@ -352,11 +354,11 @@ zabbix_export:
             name: 'PowerDNS Security Status'
           triggers:
             - uuid: 18c31b7b5e8c4d708d7c0cb301a7cd4a
-              expression: 'last(/PowerDNS Stats/pdns.stats[security-status])=3'
+              expression: 'last(/{HOST.HOST}/pdns.stats[security-status])=3'
               name: 'PowerDNS: security-status (Mandatory Upgrade)'
               priority: HIGH
             - uuid: 02592c47be7b4153aca74a619704f402
-              expression: 'last(/PowerDNS Stats/pdns.stats[security-status])=2'
+              expression: 'last(/{HOST.HOST}/pdns.stats[security-status])=2'
               name: 'PowerDNS: security-status (Recommended Upgrade)'
               priority: WARNING
 
@@ -589,7 +591,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: ans/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[udp-answers],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[udp-answers],2m)*60'
           description: 'UDP answers sent per minute (rate derived from monotonic counter udp-answers). Use this for dashboards instead of the raw total.'
 
         - uuid: 4e978385f36848398fd5430c1ed95006
@@ -599,7 +601,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: ans/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[tcp-answers],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[tcp-answers],2m)*60'
           description: 'TCP answers sent per minute (rate derived from monotonic counter tcp-answers).'
 
         - uuid: 549935f1913646d3adaaef02215035ff
@@ -609,7 +611,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[udp-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[udp-queries],2m)*60'
           description: 'UDP queries received per minute (rate derived from monotonic counter udp-queries).'
 
         - uuid: a8c7d226a5604c979f6a1e9050e49edf
@@ -619,7 +621,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[tcp-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[tcp-queries],2m)*60'
           description: 'TCP queries received per minute (rate derived from monotonic counter tcp-queries).'
 
         - uuid: 3354116640b8447195ff84444c3a2733
@@ -629,7 +631,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[udp4-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[udp4-queries],2m)*60'
           description: 'IPv4 UDP queries received per minute (rate derived from monotonic counter udp4-queries).'
 
         - uuid: eb468cc7f735459e8fab7bbfdf924a8f
@@ -639,7 +641,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[udp6-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[udp6-queries],2m)*60'
           description: 'IPv6 UDP queries received per minute (rate derived from monotonic counter udp6-queries).'
 
         - uuid: e461c1cf0e844eccbbc58603ef338b16
@@ -649,7 +651,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[tcp4-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[tcp4-queries],2m)*60'
           description: 'IPv4 TCP queries received per minute (rate derived from monotonic counter tcp4-queries).'
 
         - uuid: 14519e9315e74abebe603a4a27f7e5d4
@@ -659,7 +661,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: req/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[tcp6-queries],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[tcp6-queries],2m)*60'
           description: 'IPv6 TCP queries received per minute (rate derived from monotonic counter tcp6-queries).'
 
         - uuid: dd57344660ac4979bdaad5062f458c05
@@ -669,7 +671,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[corrupt-packets],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[corrupt-packets],2m)*60'
           description: 'Corrupt packets received per minute (rate derived from monotonic counter corrupt-packets). Sustained elevation may indicate network issues or attack traffic.'
           triggers:
             - uuid: caa80bd0c8ba4289bb4bddca3f46fb4b
@@ -690,7 +692,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[overload-drops],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[overload-drops],2m)*60'
           description: 'Queries dropped due to server overload per minute (rate derived from monotonic counter overload-drops). Any sustained non-zero value is a serious concern.'
           triggers:
             - uuid: e65adf4be07e4af49319bbfcec109f61
@@ -706,7 +708,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[timedout-packets],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[timedout-packets],2m)*60'
           description: 'Timed out packets per minute (rate derived from monotonic counter timedout-packets).'
 
         - uuid: f1aba5cd8960449fa72ef652f98bbea9
@@ -716,7 +718,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[servfail-packets],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[servfail-packets],2m)*60'
           description: 'SERVFAIL responses sent per minute (rate derived from monotonic counter servfail-packets).'
 
         - uuid: 403fd25845b042c9a7497af6b0d74d4a
@@ -726,7 +728,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[nxdomain-packets],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[nxdomain-packets],2m)*60'
           description: 'NXDOMAIN responses sent per minute (rate derived from monotonic counter nxdomain-packets).'
 
         - uuid: a0806b58c28c4e66b9c9bb50742c4693
@@ -736,7 +738,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: pkt/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[noerror-packets],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[noerror-packets],2m)*60'
           description: 'NOERROR responses sent per minute (rate derived from monotonic counter noerror-packets).'
 
         - uuid: 21afc88339154244b60bafae878bb06b
@@ -746,7 +748,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: err/min
-          params: 'rate(/PowerDNS Stats/pdns.stats[udp-in-errors],2m)*60'
+          params: 'rate(/{HOST.HOST}/pdns.stats[udp-in-errors],2m)*60'
           description: 'UDP receive errors per minute (rate derived from monotonic counter udp-in-errors). Elevation may indicate socket buffer exhaustion or network problems.'
           triggers:
             - uuid: a581225d118b4325a4c2edb00b391cd5
@@ -764,7 +766,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: '%'
-          params: 'last(/PowerDNS Stats/pdns.stats[query-cache-hit])/(last(/PowerDNS Stats/pdns.stats[query-cache-hit])+last(/PowerDNS Stats/pdns.stats[query-cache-miss])+0.000001)*100'
+          params: 'last(/{HOST.HOST}/pdns.stats[query-cache-hit])/(last(/{HOST.HOST}/pdns.stats[query-cache-hit])+last(/{HOST.HOST}/pdns.stats[query-cache-miss])+0.000001)*100'
           description: 'Query cache hit ratio percentage. Values near 100% indicate effective caching. Low values suggest cache thrashing or an undersized cache. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
           triggers:
             - uuid: 5b9a351d15134edb95059cbdd5a59b99
@@ -780,7 +782,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: '%'
-          params: 'last(/PowerDNS Stats/pdns.stats[packetcache-hit])/(last(/PowerDNS Stats/pdns.stats[packetcache-hit])+last(/PowerDNS Stats/pdns.stats[packetcache-miss])+0.000001)*100'
+          params: 'last(/{HOST.HOST}/pdns.stats[packetcache-hit])/(last(/{HOST.HOST}/pdns.stats[packetcache-hit])+last(/{HOST.HOST}/pdns.stats[packetcache-miss])+0.000001)*100'
           description: 'Packet cache hit ratio percentage. High values significantly reduce backend load. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
           triggers:
             - uuid: 51cf5f23ce0645478cccddb0047294cd
@@ -796,7 +798,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: '%'
-          params: 'last(/PowerDNS Stats/pdns.stats[zone-cache-hit])/(last(/PowerDNS Stats/pdns.stats[zone-cache-hit])+last(/PowerDNS Stats/pdns.stats[zone-cache-miss])+0.000001)*100'
+          params: 'last(/{HOST.HOST}/pdns.stats[zone-cache-hit])/(last(/{HOST.HOST}/pdns.stats[zone-cache-hit])+last(/{HOST.HOST}/pdns.stats[zone-cache-miss])+0.000001)*100'
           description: 'Zone cache hit ratio percentage. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when both hit and miss counters are zero (e.g., immediately after startup).'
 
         - uuid: 9d5f13e94b1c42089b0a462754084096
@@ -806,7 +808,7 @@ zabbix_export:
           delay: 60s
           value_type: FLOAT
           units: '%'
-          params: '(last(/PowerDNS Stats/pdns.stats[servfail-packets])+last(/PowerDNS Stats/pdns.stats[nxdomain-packets]))/(last(/PowerDNS Stats/pdns.stats[noerror-packets])+last(/PowerDNS Stats/pdns.stats[servfail-packets])+last(/PowerDNS Stats/pdns.stats[nxdomain-packets])+0.000001)*100'
+          params: '(last(/{HOST.HOST}/pdns.stats[servfail-packets])+last(/{HOST.HOST}/pdns.stats[nxdomain-packets]))/(last(/{HOST.HOST}/pdns.stats[noerror-packets])+last(/{HOST.HOST}/pdns.stats[servfail-packets])+last(/{HOST.HOST}/pdns.stats[nxdomain-packets])+0.000001)*100'
           description: 'Percentage of DNS responses that are errors (SERVFAIL + NXDOMAIN out of total responses). High values may indicate backend issues or a flood of invalid queries. Formula adds 0.000001 (epsilon) to the denominator to prevent division by zero when all counters are zero (e.g., immediately after startup).'
 
       tags:

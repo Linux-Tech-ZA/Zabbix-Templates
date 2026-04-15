@@ -43,6 +43,17 @@ zabbix_export:
           name: backend-latency
           key: 'pdns.stats[backend-latency]'
           delay: 60s
+          triggers:
+            - uuid: 3ec3b09c25e747bf89648d2d20418b58
+              expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>100000'
+              name: 'PowerDNS: Backend latency above 100ms for 5m'
+              priority: WARNING
+              description: 'Backend (database) latency has been above 100ms (100,000 µs) for 5 minutes. Check backend database performance. backend-latency is reported in microseconds.'
+            - uuid: 71b6ac34cb3f4ea3b622b2fdd73bf80a
+              expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>500000'
+              name: 'PowerDNS: Backend latency above 500ms for 5m'
+              priority: HIGH
+              description: 'Backend (database) latency has been above 500ms (500,000 µs) for 5 minutes. Backend is severely degraded. backend-latency is reported in microseconds.'
 
         - uuid: 6e8325e7132d44a1bbcd22aa1fb3cd74
           name: backend-queries
@@ -113,6 +124,17 @@ zabbix_export:
           name: fd-usage
           key: 'pdns.stats[fd-usage]'
           delay: 60s
+          triggers:
+            - uuid: e1856d211fcb4423bb45ace03f05eb65
+              expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>800'
+              name: 'PowerDNS: File descriptor usage above 800 for 10m'
+              priority: WARNING
+              description: 'PowerDNS is using more than 800 file descriptors. This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit (cat /proc/$(pidof pdns_server)/limits | grep files). Consider raising the process ulimit if this persists.'
+            - uuid: 76e90823df4148cea614e1d76c43d41b
+              expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>950'
+              name: 'PowerDNS: File descriptor usage critically high (>950) for 10m'
+              priority: HIGH
+              description: 'PowerDNS file descriptor usage is critically high (>950). This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit. Raise the process ulimit or reduce open connections immediately to avoid service failure.'
 
         - uuid: bc1ec49d5ede4134b90e55ad3c91120d
           name: incoming-notifications
@@ -173,6 +195,12 @@ zabbix_export:
           name: qsize-q
           key: 'pdns.stats[qsize-q]'
           delay: 60s
+          triggers:
+            - uuid: 33bba23bd57c438a90eb4eef1eb9c6ad
+              expression: 'min(/PowerDNS Stats/pdns.stats[qsize-q],5m)>100'
+              name: 'PowerDNS: Query queue depth above 100 for 5m'
+              priority: HIGH
+              description: 'PowerDNS query queue (qsize-q) has been above 100 for 5 minutes. The server may be overloaded or a backend is slow.'
 
         - uuid: 734a1d8ecb694a86b13325ce0651adc2
           name: query-cache-hit
@@ -785,33 +813,6 @@ zabbix_export:
           value: software
         - tag: target
           value: powerdns
-
-      triggers:
-        - uuid: 3ec3b09c25e747bf89648d2d20418b58
-          expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>100000'
-          name: 'PowerDNS: Backend latency above 100ms for 5m'
-          priority: WARNING
-          description: 'Backend (database) latency has been above 100ms (100,000 µs) for 5 minutes. Check backend database performance. backend-latency is reported in microseconds.'
-        - uuid: 71b6ac34cb3f4ea3b622b2fdd73bf80a
-          expression: 'min(/PowerDNS Stats/pdns.stats[backend-latency],5m)>500000'
-          name: 'PowerDNS: Backend latency above 500ms for 5m'
-          priority: HIGH
-          description: 'Backend (database) latency has been above 500ms (500,000 µs) for 5 minutes. Backend is severely degraded. backend-latency is reported in microseconds.'
-        - uuid: 33bba23bd57c438a90eb4eef1eb9c6ad
-          expression: 'min(/PowerDNS Stats/pdns.stats[qsize-q],5m)>100'
-          name: 'PowerDNS: Query queue depth above 100 for 5m'
-          priority: HIGH
-          description: 'PowerDNS query queue (qsize-q) has been above 100 for 5 minutes. The server may be overloaded or a backend is slow.'
-        - uuid: e1856d211fcb4423bb45ace03f05eb65
-          expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>800'
-          name: 'PowerDNS: File descriptor usage above 800 for 10m'
-          priority: WARNING
-          description: 'PowerDNS is using more than 800 file descriptors. This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit (cat /proc/$(pidof pdns_server)/limits | grep files). Consider raising the process ulimit if this persists.'
-        - uuid: 76e90823df4148cea614e1d76c43d41b
-          expression: 'min(/PowerDNS Stats/pdns.stats[fd-usage],10m)>950'
-          name: 'PowerDNS: File descriptor usage critically high (>950) for 10m'
-          priority: HIGH
-          description: 'PowerDNS file descriptor usage is critically high (>950). This threshold assumes a typical system ulimit of 1024 fd; adjust the trigger threshold to match your actual ulimit. Raise the process ulimit or reduce open connections immediately to avoid service failure.'
 
       valuemaps:
         - uuid: 7a2f60d3d46c40f48ff1f736ab3a963e

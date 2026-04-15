@@ -37,7 +37,7 @@ zabbix_export:
           delay: 60s
           triggers:
             - uuid: 248bb152e0574701b98a14eb7c8e4f54
-              expression: 'last(/{HOST.HOST}/pdns.make-dns-query)="FAIL"'
+              expression: 'last(/PowerDNS Stats/pdns.make-dns-query)="FAIL"'
               name: 'DNS server does not respond to queries'
               priority: HIGH
               description: 'PowerDNS does not respond to test DNS queries.'
@@ -354,11 +354,11 @@ zabbix_export:
             name: 'PowerDNS Security Status'
           triggers:
             - uuid: 18c31b7b5e8c4d708d7c0cb301a7cd4a
-              expression: 'last(/{HOST.HOST}/pdns.stats[security-status])=3'
+              expression: 'last(/PowerDNS Stats/pdns.stats[security-status])=3'
               name: 'PowerDNS: security-status (Mandatory Upgrade)'
               priority: HIGH
             - uuid: 02592c47be7b4153aca74a619704f402
-              expression: 'last(/{HOST.HOST}/pdns.stats[security-status])=2'
+              expression: 'last(/PowerDNS Stats/pdns.stats[security-status])=2'
               name: 'PowerDNS: security-status (Recommended Upgrade)'
               priority: WARNING
 
